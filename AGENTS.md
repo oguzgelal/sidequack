@@ -1,7 +1,7 @@
 This is a pnpm workspaces monorepo:
 
 - `client/` — Expo/React Native TV app (react-native-tvos). Prioritize TV/mobile-first patterns, performance, and cross-platform compatibility. All Expo guidance below applies to `client/`; run its commands from there.
-- `server/` — Node.js backend on Hono with Prisma + Postgres.
+- `server/` — Node.js backend on Hono with Prisma + Postgres and Better Auth. Code is layered: `src/routes` → `src/controllers` → `src/services`, zod schemas in `src/schemas`. Server-rendered pages are React via `@hono/inertia` in `src/pages`, built from shadcn/ui components (`src/components/ui`); the server runs under Vite (`pnpm dev`).
 
 Every package script is mirrored in the root `package.json` as `c:<script>` (client) or `s:<script>` (server), e.g. `pnpm s:dev`, `pnpm c:tv`. Add new scripts to the package's `package.json` first, then mirror them at the root.
 

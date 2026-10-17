@@ -1,15 +1,13 @@
-import { serve } from '@hono/node-server'
-import { Hono } from 'hono'
+import "dotenv/config";
+import { Hono } from "hono";
+import { inertia } from "@hono/inertia";
+import { rootView } from "./inertia/root-view.js";
+import { authRoutes } from "./routes/auth.routes.js";
+import { deviceRoutes } from "./routes/device.routes.js";
 
 const app = new Hono()
+  .use(inertia({ rootView }))
+  .route("/api/auth", authRoutes)
+  .route("/device", deviceRoutes);
 
-app.get('/', (c) => {
-  return c.text('Hello Hono!')
-})
-
-serve({
-  fetch: app.fetch,
-  port: 3000
-}, (info) => {
-  console.log(`Server is running on http://localhost:${info.port}`)
-})
+export default app;
