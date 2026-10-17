@@ -1,0 +1,9 @@
+{
+  "name": "tvai",
+  "private": true,
+  "packageManager": "pnpm@10.20.0",
+  "scripts": {
+    "client": "pnpm --filter client",
+    "server": "pnpm --filter server"
+  }
+}

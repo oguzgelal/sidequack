@@ -1,4 +1,9 @@
-This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
+This is a pnpm workspaces monorepo:
+
+- `client/` — Expo/React Native TV app (react-native-tvos). Prioritize TV/mobile-first patterns, performance, and cross-platform compatibility. All Expo guidance below applies to `client/`; run its commands from there.
+- `server/` — Node.js backend on Hono (`pnpm dev` from `server/`, or `pnpm server dev` from the root).
+
+`react-native` is overridden to the tvOS fork in `pnpm-workspace.yaml`; keep it that way so only one React Native copy is installed.
 
 ## Expo has changed — do not trust your training data
 
@@ -10,7 +15,7 @@ Expo ships breaking changes every SDK release. APIs you remember are likely rena
 
 ## Commands
 
-Use `bunx` instead of `npx` if the project uses bun (`bun.lock` present).
+This repo uses pnpm (`pnpm-lock.yaml` at the root). Run these from `client/`.
 
 ```bash
 npx expo install <package>  # ALWAYS use instead of npm/yarn/pnpm/bun add — resolves SDK-compatible versions

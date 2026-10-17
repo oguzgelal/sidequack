@@ -1,0 +1,9 @@
+packages:
+  - client
+  - server
+
+overrides:
+  react-native: npm:react-native-tvos@0.86-stable
+
+onlyBuiltDependencies:
+  - esbuild
