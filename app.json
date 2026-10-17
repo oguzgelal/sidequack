@@ -1,6 +1,7 @@
 {
   "expo": {
     "plugins": [
+      "./plugins/withSceneLifecycle",
       [
         "@react-native-tvos/config-tv",
         {
@@ -15,17 +16,20 @@
             "topShelfWide2x": "./assets/images/icon-4640x1440.png"
           }
         }
-      ]
+      ],
+      "expo-font"
     ],
     "android": {
       "splash": {
         "image": "./assets/images/icon-1920x720.png"
-      }
+      },
+      "package": "com.oguzgelal.tvai"
     },
     "ios": {
       "splash": {
         "image": "./assets/images/icon-1920x720.png"
-      }
+      },
+      "bundleIdentifier": "com.oguzgelal.tvai"
     },
     "name": "tvai",
     "slug": "tvai"
