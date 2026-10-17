@@ -2,6 +2,8 @@ packages:
   - client
   - server
 
+nodeLinker: hoisted
+
 overrides:
   react-native: npm:react-native-tvos@0.86-stable
 
