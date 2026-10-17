@@ -3,7 +3,19 @@
   "private": true,
   "packageManager": "pnpm@10.20.0",
   "scripts": {
-    "client": "pnpm --filter client",
-    "server": "pnpm --filter server"
+    "c:tv": "pnpm --filter client tv",
+    "c:start": "pnpm --filter client start",
+    "c:android": "pnpm --filter client android",
+    "c:ios": "pnpm --filter client ios",
+    "c:web": "pnpm --filter client web",
+    "c:prebuild:tv": "pnpm --filter client prebuild:tv",
+    "c:pbtv": "pnpm --filter client pbtv",
+    "c:prebuild": "pnpm --filter client prebuild",
+    "c:lint": "pnpm --filter client lint",
+    "s:dev": "pnpm --filter server dev",
+    "s:build": "pnpm --filter server build",
+    "s:start": "pnpm --filter server start",
+    "s:db:up": "pnpm --filter server db:up",
+    "s:db:migrate": "pnpm --filter server db:migrate"
   }
 }

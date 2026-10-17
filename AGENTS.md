@@ -1,7 +1,9 @@
 This is a pnpm workspaces monorepo:
 
 - `client/` — Expo/React Native TV app (react-native-tvos). Prioritize TV/mobile-first patterns, performance, and cross-platform compatibility. All Expo guidance below applies to `client/`; run its commands from there.
-- `server/` — Node.js backend on Hono (`pnpm dev` from `server/`, or `pnpm server dev` from the root).
+- `server/` — Node.js backend on Hono with Prisma + Postgres.
+
+Every package script is mirrored in the root `package.json` as `c:<script>` (client) or `s:<script>` (server), e.g. `pnpm s:dev`, `pnpm c:tv`. Add new scripts to the package's `package.json` first, then mirror them at the root.
 
 `react-native` is overridden to the tvOS fork in `pnpm-workspace.yaml`; keep it that way so only one React Native copy is installed.
 
