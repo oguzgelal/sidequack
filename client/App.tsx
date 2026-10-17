@@ -2,7 +2,7 @@ import { ActivityIndicator } from "react-native";
 import { Screen } from "./src/components/screen";
 import { authClient } from "./src/lib/auth-client";
 import { sessionStore } from "./src/lib/session-store";
-import { HomeScreen } from "./src/screens/home-screen";
+import { ChatScreen } from "./src/screens/chat-screen";
 import { SignInScreen } from "./src/screens/sign-in-screen";
 import { colors } from "./src/theme";
 
@@ -38,7 +38,7 @@ export default function App() {
 
   return (
     <Screen>
-      <HomeScreen user={session.data.user} onSignOut={handleSignOut} />
+      <ChatScreen onSignOut={handleSignOut} />
     </Screen>
   );
 }

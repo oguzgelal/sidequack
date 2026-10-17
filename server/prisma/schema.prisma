@@ -23,8 +23,26 @@ model User {
   sessions      Session[]
   accounts      Account[]
 
+  persons        Person[] @relation("UserPersons")
+  activePersonId String?  @unique
+  activePerson   Person?  @relation("ActivePerson", fields: [activePersonId], references: [id], onDelete: SetNull)
+
   @@unique([email])
   @@map("user")
+}
+
+model Person {
+  id        String   @id @default(uuid(7))
+  name      String
+  metadata  Json     @default("{}")
+  userId    String
+  user      User     @relation("UserPersons", fields: [userId], references: [id], onDelete: Cascade)
+  activeFor User?    @relation("ActivePerson")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("person")
 }
 
 model Session {

@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth/minimal";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { bearer, deviceAuthorization } from "better-auth/plugins";
+import { personService } from "../services/person.service.js";
 import { prisma } from "./db.js";
 
 export const TV_CLIENT_ID = "tvai-tv";
@@ -13,6 +14,13 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        after: (user) => personService.createDefault(user),
+      },
+    },
   },
   socialProviders: {
     google: {

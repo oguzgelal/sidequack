@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
+    "@tanstack/ai-react": "0.30.4",
     "better-auth": "1.7.10",
     "expo": "~57.0.13",
     "expo-font": "~57.0.4",
