@@ -1,5 +1,13 @@
+import { askUserQuestionTool } from "./ask-user-question.tool.js";
 import { currentTimeTool } from "./current-time.tool.js";
+import { thinkTool } from "./think.tool.js";
 import { upsertMemoryTool } from "./upsert-memory.tool.js";
 import { weatherTool } from "./weather.tool.js";
 
-export const chatTools = [currentTimeTool, weatherTool, upsertMemoryTool];
+export const chatTools = [
+  thinkTool,
+  askUserQuestionTool,
+  currentTimeTool,
+  weatherTool,
+  upsertMemoryTool,
+];

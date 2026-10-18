@@ -1,7 +1,6 @@
-import type { ModelMessage, UIMessage } from "@tanstack/ai";
 import type { ChatContext } from "../tools/chat-context.js";
 import { chatTools } from "../tools/index.js";
-import { aiService } from "./ai.service.js";
+import { aiService, type ChatRun } from "./ai.service.js";
 import { personService } from "./person.service.js";
 
 const AGENT_NAME = "Robert";
@@ -13,15 +12,10 @@ const SYSTEM_PROMPT = [
 ].join(" ");
 
 class ChatService {
-  stream(
-    userId: string,
-    messages: Array<UIMessage | ModelMessage>,
-    context: ChatContext,
-    abortController: AbortController,
-  ) {
+  stream(userId: string, run: ChatRun, context: ChatContext, abortController: AbortController) {
     return aiService.chat({
       userId,
-      messages,
+      run,
       systemPrompts: [SYSTEM_PROMPT, personService.describe(context.person)],
       tools: chatTools,
       context,

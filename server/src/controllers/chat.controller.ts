@@ -21,7 +21,7 @@ class ChatController {
     const person = await personService.getActive(session.user.id);
     const abortController = new AbortController();
     try {
-      const stream = await chatService.stream(session.user.id, params.messages, { person }, abortController);
+      const stream = await chatService.stream(session.user.id, params, { person }, abortController);
       return toServerSentEventsResponse(stream, { abortController });
     } catch (error) {
       if (!(error instanceof UsageLimitError)) throw error;

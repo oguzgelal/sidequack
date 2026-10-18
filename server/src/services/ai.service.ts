@@ -3,8 +3,7 @@ import {
   maxIterations,
   type AnyTool,
   type ChatMiddleware,
-  type ModelMessage,
-  type UIMessage,
+  type chatParamsFromRequest,
 } from "@tanstack/ai";
 import { openRouterText } from "@tanstack/ai-openrouter";
 import { prisma } from "../lib/db.js";
@@ -15,9 +14,14 @@ const SMALL_MODEL = "anthropic/claude-haiku-4.5";
 const MAX_ITERATIONS = 10;
 const MONTHLY_CAP_USD = 10;
 
+export type ChatRun = Pick<
+  Awaited<ReturnType<typeof chatParamsFromRequest>>,
+  "messages" | "threadId" | "runId" | "parentRunId" | "resume"
+>;
+
 type ChatRequest<TContext> = {
   userId: string;
-  messages: Array<UIMessage | ModelMessage>;
+  run: ChatRun;
   systemPrompts: string[];
   tools: AnyTool[];
   context: TContext;
@@ -33,7 +37,7 @@ type TextRequest = {
 class AiService {
   async chat<TContext>({
     userId,
-    messages,
+    run,
     systemPrompts,
     tools,
     context,
@@ -46,7 +50,11 @@ class AiService {
 
     return chat({
       adapter: openRouterText(CHAT_MODEL),
-      messages,
+      messages: run.messages,
+      threadId: run.threadId,
+      runId: run.runId,
+      parentRunId: run.parentRunId,
+      resume: run.resume,
       systemPrompts,
       tools,
       context,

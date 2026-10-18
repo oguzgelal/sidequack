@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useChat, type UIMessage } from "@tanstack/ai-react";
 import { MessageSquarePlus, RotateCcwClock } from "lucide-react-native";
 import { chatConnection } from "../../lib/chat-connection";
+import { useTVBack } from "../../hooks/use-tv-back";
 import { useConversationStore } from "../../stores/conversation-store";
 import { colors, space, typography } from "../../theme";
 import { Duck } from "../ui/duck";
@@ -11,6 +12,10 @@ import { ChatComposer } from "./chat-composer";
 import { ChatHeader } from "./chat-header";
 import { ChatMessages } from "./chat-messages";
 import { ChatWelcome } from "./chat-welcome";
+import { ComposerHint } from "./composer-hint";
+import type { QuestionAnswer } from "./assistant-message/question-part";
+
+const ASK_USER_QUESTION = "ask_user_question";
 
 type ChatConversationProps = {
   savedMessages: UIMessage[];
@@ -20,19 +25,34 @@ type ChatConversationProps = {
   onSignOut: () => void;
 };
 
-export function ChatConversation({ savedMessages, onSave, onError, onOpenHistory, onSignOut }: ChatConversationProps) {
+export function ChatConversation({
+  savedMessages,
+  onSave,
+  onError,
+  onOpenHistory,
+  onSignOut,
+}: ChatConversationProps) {
   const [input, setInput] = useState("");
   const scrollRef = useRef<ScrollView>(null);
-  const startNewConversation = useConversationStore((state) => state.startNewConversation);
+  const composerRef = useRef<View>(null);
+  const [isComposerFocused, setIsComposerFocused] = useState(true);
+  const startNewConversation = useConversationStore(
+    (state) => state.startNewConversation,
+  );
 
-  const { messages, sendMessage, stop, isLoading, error } = useChat({
-    connection: chatConnection,
-    initialMessages: savedMessages,
-    onError,
-  });
+  useTVBack(() => composerRef.current?.requestTVFocus(), !isComposerFocused);
+
+  const isFirstLayoutRef = useRef(true);
+
+  const { messages, sendMessage, addToolResult, stop, isLoading, error } =
+    useChat({
+      connection: chatConnection,
+      initialMessages: savedMessages,
+      onError,
+    });
 
   const saveTurn = useEffectEvent(() => {
-    if (messages.at(-1)?.id === savedMessages.at(-1)?.id) return;
+    if (JSON.stringify(messages) === JSON.stringify(savedMessages)) return;
     onSave(messages);
   });
 
@@ -40,11 +60,35 @@ export function ChatConversation({ savedMessages, onSave, onError, onOpenHistory
     if (!isLoading) saveTurn();
   }, [isLoading]);
 
+  const pendingQuestion = messages
+    .at(-1)
+    ?.parts.find(
+      (part) =>
+        part.type === "tool-call" &&
+        part.name === ASK_USER_QUESTION &&
+        part.output === undefined,
+    );
+
+  const handleAnswer = (toolCallId: string, answer: QuestionAnswer) => {
+    addToolResult({ toolCallId, tool: ASK_USER_QUESTION, output: answer });
+    composerRef.current?.requestTVFocus();
+  };
+
   const handleSubmit = () => {
     const text = input.trim();
     if (!text) return;
-    sendMessage(text);
     setInput("");
+    if (pendingQuestion?.type === "tool-call") {
+      handleAnswer(pendingQuestion.id, { answers: [], reply: text });
+      return;
+    }
+    sendMessage(text);
+  };
+
+  const handleContentSizeChange = () => {
+    if (!isLoading && !isFirstLayoutRef.current) return;
+    scrollRef.current?.scrollToEnd({ animated: !isFirstLayoutRef.current });
+    isFirstLayoutRef.current = false;
   };
 
   const isEmpty = messages.length === 0;
@@ -53,6 +97,8 @@ export function ChatConversation({ savedMessages, onSave, onError, onOpenHistory
   const composerBar = (
     <View style={[styles.composerBar, isEmpty && styles.welcomeComposerBar]}>
       <ChatComposer
+        ref={composerRef}
+        onFocusChange={setIsComposerFocused}
         value={input}
         onChangeText={setInput}
         onSubmit={handleSubmit}
@@ -61,8 +107,18 @@ export function ChatConversation({ savedMessages, onSave, onError, onOpenHistory
         hasTVPreferredFocus
         style={styles.composer}
       />
-      {!isEmpty && <IconButton icon={MessageSquarePlus} label="New conversation" onPress={startNewConversation} />}
-      <IconButton icon={RotateCcwClock} label="Conversation history" onPress={onOpenHistory} />
+      {!isEmpty && (
+        <IconButton
+          icon={MessageSquarePlus}
+          label="New conversation"
+          onPress={startNewConversation}
+        />
+      )}
+      <IconButton
+        icon={RotateCcwClock}
+        label="Conversation history"
+        onPress={onOpenHistory}
+      />
     </View>
   );
 
@@ -71,6 +127,7 @@ export function ChatConversation({ savedMessages, onSave, onError, onOpenHistory
       <View style={styles.container}>
         <ChatHeader onSignOut={onSignOut} />
         <ChatWelcome onSuggestion={sendMessage} composer={composerBar} />
+        {!isComposerFocused && <ComposerHint />}
       </View>
     );
   }
@@ -80,23 +137,29 @@ export function ChatConversation({ savedMessages, onSave, onError, onOpenHistory
       <ChatHeader onSignOut={onSignOut} />
       <ScrollView
         ref={scrollRef}
-        // react-native-tvos only maps `focusable` to `isTVSelectable` inside View, not ScrollView.
-        isTVSelectable
-        focusable
         style={styles.messages}
         contentContainerStyle={styles.messagesContent}
-        onContentSizeChange={() => scrollRef.current?.scrollToEnd()}
+        onContentSizeChange={handleContentSizeChange}
       >
-        <ChatMessages messages={messages} />
+        <ChatMessages
+          messages={messages}
+          canAnswer={!isLoading}
+          onAnswer={handleAnswer}
+        />
         {isThinking && (
           <View style={styles.thinking}>
             <Duck height={30} />
             <Text style={typography.caption}>Thinking…</Text>
           </View>
         )}
+        {error && (
+          <Text style={[typography.body, styles.error]}>
+            Something went wrong: {error.message}
+          </Text>
+        )}
+        {composerBar}
       </ScrollView>
-      {error && <Text style={[typography.body, styles.error]}>Something went wrong: {error.message}</Text>}
-      {composerBar}
+      {!isComposerFocused && <ComposerHint />}
     </View>
   );
 }
@@ -122,11 +185,13 @@ const styles = StyleSheet.create({
   },
   messages: {
     flex: 1,
+    margin: -space[5],
   },
   messagesContent: {
     flexGrow: 1,
     justifyContent: "flex-end",
     gap: space[5],
+    padding: space[5],
   },
   thinking: {
     flexDirection: "row",

@@ -1,36 +1,46 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type Ref } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View, type StyleProp, type ViewStyle } from "react-native";
 import { Mic, Square } from "lucide-react-native";
 import { colors, fonts, radius, shadows, space, typography } from "../../theme";
 
 type ChatComposerProps = {
+  ref?: Ref<View>;
   value: string;
   onChangeText: (text: string) => void;
   onSubmit: () => void;
   isResponding?: boolean;
   onStop?: () => void;
+  onFocusChange?: (focused: boolean) => void;
   hasTVPreferredFocus?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
 export function ChatComposer({
+  ref,
   value,
   onChangeText,
   onSubmit,
   isResponding,
   onStop,
+  onFocusChange,
   hasTVPreferredFocus,
   style,
 }: ChatComposerProps) {
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<TextInput>(null);
 
+  const handleFocusChange = (isFocused: boolean) => {
+    setFocused(isFocused);
+    onFocusChange?.(isFocused);
+  };
+
   if (isResponding) {
     return (
       <Pressable
+        ref={ref}
         onPress={onStop}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
+        onFocus={() => handleFocusChange(true)}
+        onBlur={() => handleFocusChange(false)}
         hasTVPreferredFocus={hasTVPreferredFocus}
         accessibilityLabel="Stop responding"
         style={[styles.composer, focused && styles.focused, style]}
@@ -45,9 +55,10 @@ export function ChatComposer({
 
   return (
     <Pressable
+      ref={ref}
       onPress={() => inputRef.current?.focus()}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
+      onFocus={() => handleFocusChange(true)}
+      onBlur={() => handleFocusChange(false)}
       hasTVPreferredFocus={hasTVPreferredFocus}
       accessibilityLabel="Ask anything"
       style={[styles.composer, focused && styles.focused, style]}
