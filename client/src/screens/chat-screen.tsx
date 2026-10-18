@@ -1,15 +1,29 @@
 import { useRef, useState } from "react";
-import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { useChat } from "@tanstack/ai-react";
 import { ChatMessages } from "../components/chat/chat-messages";
 import { TvButton } from "../components/tv-button";
+import { UsageLimitReached } from "../components/usage-limit-reached";
+import { useAiUsage } from "../hooks/use-ai-usage";
 import { chatConnection } from "../lib/chat-connection";
 import { colors, typography } from "../theme";
 
 export function ChatScreen({ onSignOut }: { onSignOut: () => void }) {
   const [input, setInput] = useState("");
   const scrollRef = useRef<ScrollView>(null);
-  const { messages, sendMessage, isLoading, error } = useChat({ connection: chatConnection });
+  const usage = useAiUsage();
+
+  const { messages, sendMessage, isLoading, error } = useChat({
+    connection: chatConnection,
+    onError: usage.refresh,
+  });
 
   const handleSubmit = () => {
     const text = input.trim();
@@ -17,6 +31,14 @@ export function ChatScreen({ onSignOut }: { onSignOut: () => void }) {
     sendMessage(text);
     setInput("");
   };
+
+  if (usage.status === "loading") {
+    return <ActivityIndicator size="large" color={colors.foreground} />;
+  }
+
+  if (usage.status === "limit-reached") {
+    return <UsageLimitReached onSignOut={onSignOut} />;
+  }
 
   return (
     <View style={styles.container}>

@@ -6,3 +6,5 @@ export class ServiceError extends Error {
     return new ServiceError(error.body?.error_description ?? error.body?.message ?? error.message);
   }
 }
+
+export class UsageLimitError extends ServiceError {}

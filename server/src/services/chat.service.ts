@@ -12,11 +12,13 @@ const SYSTEM_PROMPT = [
 
 class ChatService {
   stream(
+    userId: string,
     messages: Array<UIMessage | ModelMessage>,
     context: ChatContext,
     abortController: AbortController,
   ) {
     return aiService.chat({
+      userId,
       messages,
       systemPrompts: [SYSTEM_PROMPT, personService.describe(context.person)],
       tools: chatTools,

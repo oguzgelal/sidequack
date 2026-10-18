@@ -3,6 +3,7 @@ import { chatParamsFromRequest, toServerSentEventsResponse } from "@tanstack/ai"
 import { authService } from "../services/auth.service.js";
 import { chatService } from "../services/chat.service.js";
 import { personService } from "../services/person.service.js";
+import { UsageLimitError } from "../services/service-error.js";
 
 const factory = createFactory();
 
@@ -19,8 +20,13 @@ class ChatController {
 
     const person = await personService.getActive(session.user.id);
     const abortController = new AbortController();
-    const stream = chatService.stream(params.messages, { person }, abortController);
-    return toServerSentEventsResponse(stream, { abortController });
+    try {
+      const stream = await chatService.stream(session.user.id, params.messages, { person }, abortController);
+      return toServerSentEventsResponse(stream, { abortController });
+    } catch (error) {
+      if (!(error instanceof UsageLimitError)) throw error;
+      return c.json({ error: error.message }, 402);
+    }
   });
 }
 

@@ -23,6 +23,7 @@ model User {
   sessions      Session[]
   accounts      Account[]
 
+  aiUsages       AiUsage[]
   persons        Person[] @relation("UserPersons")
   activePersonId String?  @unique
   activePerson   Person?  @relation("ActivePerson", fields: [activePersonId], references: [id], onDelete: SetNull)
@@ -43,6 +44,19 @@ model Person {
 
   @@index([userId])
   @@map("person")
+}
+
+model AiUsage {
+  id        String   @id @default(uuid(7))
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key       String
+  usd       Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, key])
+  @@map("aiUsage")
 }
 
 model Session {
