@@ -5,6 +5,7 @@ import { ChatComposer } from "../components/chat/chat-composer";
 import { ChatHeader } from "../components/chat/chat-header";
 import { ChatMessages } from "../components/chat/chat-messages";
 import { ChatWelcome } from "../components/chat/chat-welcome";
+import { Duck } from "../components/ui/duck";
 import { useAiUsage } from "../hooks/use-ai-usage";
 import { chatConnection } from "../lib/chat-connection";
 import { colors, space, typography } from "../theme";
@@ -15,7 +16,7 @@ export function ChatScreen({ onSignOut }: { onSignOut: () => void }) {
   const scrollRef = useRef<ScrollView>(null);
   const usage = useAiUsage();
 
-  const { messages, sendMessage, isLoading, error } = useChat({
+  const { messages, sendMessage, stop, isLoading, error } = useChat({
     connection: chatConnection,
     onError: usage.refresh,
   });
@@ -48,7 +49,6 @@ export function ChatScreen({ onSignOut }: { onSignOut: () => void }) {
               value={input}
               onChangeText={setInput}
               onSubmit={handleSubmit}
-              editable={!isLoading}
               hasTVPreferredFocus
               style={styles.welcomeComposer}
             />
@@ -63,15 +63,29 @@ export function ChatScreen({ onSignOut }: { onSignOut: () => void }) {
       <ChatHeader onSignOut={onSignOut} />
       <ScrollView
         ref={scrollRef}
+        // react-native-tvos only maps `focusable` to `isTVSelectable` inside View, not ScrollView.
+        isTVSelectable
         style={styles.messages}
         contentContainerStyle={styles.messagesContent}
         onContentSizeChange={() => scrollRef.current?.scrollToEnd()}
       >
         <ChatMessages messages={messages} />
-        {isThinking && <Text style={typography.caption}>Thinking…</Text>}
+        {isThinking && (
+          <View style={styles.thinking}>
+            <Duck height={30} />
+            <Text style={typography.caption}>Thinking…</Text>
+          </View>
+        )}
       </ScrollView>
       {error && <Text style={[typography.body, styles.error]}>Something went wrong: {error.message}</Text>}
-      <ChatComposer value={input} onChangeText={setInput} onSubmit={handleSubmit} editable={!isLoading} />
+      <ChatComposer
+        value={input}
+        onChangeText={setInput}
+        onSubmit={handleSubmit}
+        isResponding={isLoading}
+        onStop={stop}
+        hasTVPreferredFocus
+      />
     </View>
   );
 }
@@ -94,6 +108,11 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "flex-end",
     gap: space[5],
+  },
+  thinking: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space[2],
   },
   error: {
     color: colors.danger,

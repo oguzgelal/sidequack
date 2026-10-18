@@ -1,27 +1,53 @@
 import { useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View, type StyleProp, type ViewStyle } from "react-native";
-import { Mic } from "lucide-react-native";
+import { Mic, Square } from "lucide-react-native";
 import { colors, fonts, radius, shadows, space, typography } from "../../theme";
 
 type ChatComposerProps = {
   value: string;
   onChangeText: (text: string) => void;
   onSubmit: () => void;
-  editable: boolean;
+  isResponding?: boolean;
+  onStop?: () => void;
   hasTVPreferredFocus?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
-export function ChatComposer({ value, onChangeText, onSubmit, editable, hasTVPreferredFocus, style }: ChatComposerProps) {
+export function ChatComposer({
+  value,
+  onChangeText,
+  onSubmit,
+  isResponding,
+  onStop,
+  hasTVPreferredFocus,
+  style,
+}: ChatComposerProps) {
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<TextInput>(null);
+
+  if (isResponding) {
+    return (
+      <Pressable
+        onPress={onStop}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        hasTVPreferredFocus={hasTVPreferredFocus}
+        accessibilityLabel="Stop responding"
+        style={[styles.composer, focused && styles.focused, style]}
+      >
+        <View style={styles.mic}>
+          <Square size={28} color={colors.onDuck} fill={colors.onDuck} />
+        </View>
+        <Text style={styles.text}>Stop responding</Text>
+      </Pressable>
+    );
+  }
 
   return (
     <Pressable
       onPress={() => inputRef.current?.focus()}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
-      disabled={!editable}
       hasTVPreferredFocus={hasTVPreferredFocus}
       accessibilityLabel="Ask anything"
       style={[styles.composer, focused && styles.focused, style]}
