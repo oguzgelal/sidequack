@@ -1,39 +1,23 @@
-import { useEffect, useState } from "react";
-import { sessionStore } from "../lib/session-store";
+import { useQuery } from "@tanstack/react-query";
+import { apiFetch } from "../lib/api";
 
-type AiUsageStatus = "loading" | "available" | "limit-reached";
+type AiUsage = {
+  usd: number;
+  capUsd: number;
+  limitReached: boolean;
+};
 
 export function useAiUsage() {
-  const [status, setStatus] = useState<AiUsageStatus>("loading");
-  const [check, setCheck] = useState(0);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    fetch(`${process.env.EXPO_PUBLIC_API_URL}/ai/usage`, {
-      headers: { Authorization: `Bearer ${sessionStore.getToken()}` },
-    })
-      .then((response) => response.json())
-      .then((usage: { limitReached: boolean }) => {
-        if (!cancelled) {
-          setStatus(usage.limitReached ? "limit-reached" : "available");
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setStatus("available");
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [check]);
+  const { data, isPending, refetch } = useQuery({
+    queryKey: ["ai-usage"],
+    queryFn: () => apiFetch<AiUsage>("/ai/usage"),
+  });
 
   return {
-    status,
+    isPending,
+    limitReached: data?.limitReached ?? false,
     refresh: () => {
-      setCheck((value) => value + 1);
+      refetch();
     },
   };
 }

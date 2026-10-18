@@ -8,3 +8,5 @@ export class ServiceError extends Error {
 }
 
 export class UsageLimitError extends ServiceError {}
+
+export class NotFoundError extends ServiceError {}

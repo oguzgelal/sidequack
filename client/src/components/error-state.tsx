@@ -3,16 +3,17 @@ import { space, typography } from "../theme";
 import { Button } from "./ui/button";
 import { Duck } from "./ui/duck";
 
-type SignInErrorProps = {
+type ErrorStateProps = {
+  title: string;
   message: string;
   onRetry: () => void;
 };
 
-export function SignInError({ message, onRetry }: SignInErrorProps) {
+export function ErrorState({ title, message, onRetry }: ErrorStateProps) {
   return (
     <View style={styles.container}>
       <Duck height={160} />
-      <Text style={typography.title1}>{"Couldn't sign you in"}</Text>
+      <Text style={typography.title1}>{title}</Text>
       <Text style={[typography.body, styles.message]}>{message}</Text>
       <Button label="Try again" variant="primary" onPress={onRetry} hasTVPreferredFocus />
     </View>

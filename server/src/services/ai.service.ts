@@ -11,6 +11,7 @@ import { prisma } from "../lib/db.js";
 import { UsageLimitError } from "./service-error.js";
 
 const CHAT_MODEL = "anthropic/claude-sonnet-5.5";
+const SMALL_MODEL = "anthropic/claude-haiku-4.5";
 const MAX_ITERATIONS = 10;
 const MONTHLY_CAP_USD = 10;
 
@@ -21,6 +22,12 @@ type ChatRequest<TContext> = {
   tools: AnyTool[];
   context: TContext;
   abortController: AbortController;
+};
+
+type TextRequest = {
+  userId: string;
+  prompt: string;
+  systemPrompts: string[];
 };
 
 class AiService {
@@ -37,15 +44,6 @@ class AiService {
       throw new UsageLimitError("You've used this month's AI allowance.");
     }
 
-    const usageMiddleware: ChatMiddleware = {
-      name: "usage",
-      onUsage: (_, usage) =>
-        this.recordUsage(
-          userId,
-          (usage.cost ?? 0) + (usage.costDetails?.upstreamCost ?? 0),
-        ),
-    };
-
     return chat({
       adapter: openRouterText(CHAT_MODEL),
       messages,
@@ -54,8 +52,19 @@ class AiService {
       context,
       agentLoopStrategy: maxIterations(MAX_ITERATIONS),
       abortController,
-      middleware: [usageMiddleware],
+      middleware: [this.usageMiddleware(userId)],
     });
+  }
+
+  async generateText({ userId, prompt, systemPrompts }: TextRequest) {
+    const { text } = await chat({
+      adapter: openRouterText(SMALL_MODEL),
+      messages: [{ role: "user", content: prompt }],
+      systemPrompts,
+      stream: false,
+      middleware: [this.usageMiddleware(userId)],
+    });
+    return text;
   }
 
   async getUsage(userId: string) {
@@ -72,6 +81,17 @@ class AiService {
       usd,
       capUsd: MONTHLY_CAP_USD,
       limitReached: usd >= MONTHLY_CAP_USD,
+    };
+  }
+
+  private usageMiddleware(userId: string): ChatMiddleware {
+    return {
+      name: "usage",
+      onUsage: (_, usage) =>
+        this.recordUsage(
+          userId,
+          (usage.cost ?? 0) + (usage.costDetails?.upstreamCost ?? 0),
+        ),
     };
   }
 

@@ -1,120 +1,48 @@
-import { useRef, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useChat } from "@tanstack/ai-react";
-import { ChatComposer } from "../components/chat/chat-composer";
-import { ChatHeader } from "../components/chat/chat-header";
-import { ChatMessages } from "../components/chat/chat-messages";
-import { ChatWelcome } from "../components/chat/chat-welcome";
-import { Duck } from "../components/ui/duck";
+import { ActivityIndicator } from "react-native";
+import { ChatConversation } from "../components/chat/chat-conversation";
+import { ErrorState } from "../components/error-state";
 import { useAiUsage } from "../hooks/use-ai-usage";
-import { chatConnection } from "../lib/chat-connection";
-import { colors, space, typography } from "../theme";
+import { useConversation } from "../hooks/use-conversation";
+import { useConversationStore } from "../stores/conversation-store";
+import { colors } from "../theme";
 import { PaywallScreen } from "./paywall-screen";
 
-export function ChatScreen({ onSignOut }: { onSignOut: () => void }) {
-  const [input, setInput] = useState("");
-  const scrollRef = useRef<ScrollView>(null);
+type ChatScreenProps = {
+  onOpenHistory: () => void;
+  onSignOut: () => void;
+};
+
+export function ChatScreen({ onOpenHistory, onSignOut }: ChatScreenProps) {
+  const conversationId = useConversationStore((state) => state.conversationId);
   const usage = useAiUsage();
+  const conversation = useConversation(conversationId);
 
-  const { messages, sendMessage, stop, isLoading, error } = useChat({
-    connection: chatConnection,
-    onError: usage.refresh,
-  });
-
-  const handleSubmit = () => {
-    const text = input.trim();
-    if (!text) return;
-    sendMessage(text);
-    setInput("");
-  };
-
-  if (usage.status === "loading") {
+  if (usage.isPending || conversation.isPending) {
     return <ActivityIndicator size="large" color={colors.duck} />;
   }
 
-  if (usage.status === "limit-reached") {
+  if (usage.limitReached) {
     return <PaywallScreen />;
   }
 
-  const isThinking = isLoading && messages.at(-1)?.role === "user";
-
-  if (messages.length === 0) {
+  if (!conversation.messages) {
     return (
-      <View style={styles.container}>
-        <ChatHeader onSignOut={onSignOut} />
-        <ChatWelcome
-          onSuggestion={sendMessage}
-          composer={
-            <ChatComposer
-              value={input}
-              onChangeText={setInput}
-              onSubmit={handleSubmit}
-              hasTVPreferredFocus
-              style={styles.welcomeComposer}
-            />
-          }
-        />
-      </View>
+      <ErrorState
+        title="Couldn't load this conversation"
+        message="Check your connection and try again."
+        onRetry={conversation.retry}
+      />
     );
   }
 
   return (
-    <View style={styles.container}>
-      <ChatHeader onSignOut={onSignOut} />
-      <ScrollView
-        ref={scrollRef}
-        // react-native-tvos only maps `focusable` to `isTVSelectable` inside View, not ScrollView.
-        isTVSelectable
-        style={styles.messages}
-        contentContainerStyle={styles.messagesContent}
-        onContentSizeChange={() => scrollRef.current?.scrollToEnd()}
-      >
-        <ChatMessages messages={messages} />
-        {isThinking && (
-          <View style={styles.thinking}>
-            <Duck height={30} />
-            <Text style={typography.caption}>Thinking…</Text>
-          </View>
-        )}
-      </ScrollView>
-      {error && <Text style={[typography.body, styles.error]}>Something went wrong: {error.message}</Text>}
-      <ChatComposer
-        value={input}
-        onChangeText={setInput}
-        onSubmit={handleSubmit}
-        isResponding={isLoading}
-        onStop={stop}
-        hasTVPreferredFocus
-      />
-    </View>
+    <ChatConversation
+      key={conversationId}
+      savedMessages={conversation.messages}
+      onSave={conversation.save}
+      onError={usage.refresh}
+      onOpenHistory={onOpenHistory}
+      onSignOut={onSignOut}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignSelf: "stretch",
-    paddingVertical: space.safeY,
-    paddingHorizontal: space.safeX,
-    gap: space[5],
-  },
-  welcomeComposer: {
-    width: 1200,
-  },
-  messages: {
-    flex: 1,
-  },
-  messagesContent: {
-    flexGrow: 1,
-    justifyContent: "flex-end",
-    gap: space[5],
-  },
-  thinking: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: space[2],
-  },
-  error: {
-    color: colors.danger,
-  },
-});

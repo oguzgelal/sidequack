@@ -24,23 +24,25 @@ model User {
   accounts      Account[]
 
   aiUsages       AiUsage[]
-  persons        Person[] @relation("UserPersons")
-  activePersonId String?  @unique
-  activePerson   Person?  @relation("ActivePerson", fields: [activePersonId], references: [id], onDelete: SetNull)
+  conversations  Conversation[]
+  persons        Person[]       @relation("UserPersons")
+  activePersonId String?        @unique
+  activePerson   Person?        @relation("ActivePerson", fields: [activePersonId], references: [id], onDelete: SetNull)
 
   @@unique([email])
   @@map("user")
 }
 
 model Person {
-  id        String   @id @default(uuid(7))
-  name      String
-  metadata  Json     @default("{}")
-  userId    String
-  user      User     @relation("UserPersons", fields: [userId], references: [id], onDelete: Cascade)
-  activeFor User?    @relation("ActivePerson")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String         @id @default(uuid(7))
+  name          String
+  metadata      Json           @default("{}")
+  userId        String
+  user          User           @relation("UserPersons", fields: [userId], references: [id], onDelete: Cascade)
+  activeFor     User?          @relation("ActivePerson")
+  conversations Conversation[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@index([userId])
   @@map("person")
@@ -57,6 +59,21 @@ model AiUsage {
 
   @@unique([userId, key])
   @@map("aiUsage")
+}
+
+model Conversation {
+  id        String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  personId  String
+  person    Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  title     String?
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, updatedAt])
+  @@map("conversation")
 }
 
 model Session {
