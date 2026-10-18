@@ -11,7 +11,7 @@ type SignInScreenProps = {
 export function SignInScreen({ onAuthorized }: SignInScreenProps) {
   const { state, restart } = useDeviceAuthorization(onAuthorized);
 
-  if (state.status === "loading") return <ActivityIndicator size="large" color={colors.foreground} />;
+  if (state.status === "loading") return <ActivityIndicator size="large" color={colors.duck} />;
   if (state.status === "error") return <SignInError message={state.message} onRetry={restart} />;
   return <DeviceCodePanel code={state.code} onRestart={restart} />;
 }

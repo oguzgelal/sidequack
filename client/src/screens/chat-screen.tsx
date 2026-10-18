@@ -1,19 +1,14 @@
 import { useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useChat } from "@tanstack/ai-react";
+import { ChatComposer } from "../components/chat/chat-composer";
+import { ChatHeader } from "../components/chat/chat-header";
 import { ChatMessages } from "../components/chat/chat-messages";
-import { TvButton } from "../components/tv-button";
-import { UsageLimitReached } from "../components/usage-limit-reached";
+import { ChatWelcome } from "../components/chat/chat-welcome";
 import { useAiUsage } from "../hooks/use-ai-usage";
 import { chatConnection } from "../lib/chat-connection";
-import { colors, typography } from "../theme";
+import { colors, space, typography } from "../theme";
+import { PaywallScreen } from "./paywall-screen";
 
 export function ChatScreen({ onSignOut }: { onSignOut: () => void }) {
   const [input, setInput] = useState("");
@@ -33,35 +28,50 @@ export function ChatScreen({ onSignOut }: { onSignOut: () => void }) {
   };
 
   if (usage.status === "loading") {
-    return <ActivityIndicator size="large" color={colors.foreground} />;
+    return <ActivityIndicator size="large" color={colors.duck} />;
   }
 
   if (usage.status === "limit-reached") {
-    return <UsageLimitReached onSignOut={onSignOut} />;
+    return <PaywallScreen />;
+  }
+
+  const isThinking = isLoading && messages.at(-1)?.role === "user";
+
+  if (messages.length === 0) {
+    return (
+      <View style={styles.container}>
+        <ChatHeader onSignOut={onSignOut} />
+        <ChatWelcome
+          onSuggestion={sendMessage}
+          composer={
+            <ChatComposer
+              value={input}
+              onChangeText={setInput}
+              onSubmit={handleSubmit}
+              editable={!isLoading}
+              hasTVPreferredFocus
+              style={styles.welcomeComposer}
+            />
+          }
+        />
+      </View>
+    );
   }
 
   return (
     <View style={styles.container}>
+      <ChatHeader onSignOut={onSignOut} />
       <ScrollView
         ref={scrollRef}
         style={styles.messages}
+        contentContainerStyle={styles.messagesContent}
         onContentSizeChange={() => scrollRef.current?.scrollToEnd()}
       >
         <ChatMessages messages={messages} />
+        {isThinking && <Text style={typography.caption}>Thinking…</Text>}
       </ScrollView>
-      {error && <Text style={typography.body}>{error.message}</Text>}
-      <View style={styles.composer}>
-        <TextInput
-          style={styles.input}
-          value={input}
-          onChangeText={setInput}
-          onSubmitEditing={handleSubmit}
-          editable={!isLoading}
-          placeholder="Ask anything"
-          placeholderTextColor={colors.mutedForeground}
-        />
-        <TvButton label="Sign out" onPress={onSignOut} />
-      </View>
+      {error && <Text style={[typography.body, styles.error]}>Something went wrong: {error.message}</Text>}
+      <ChatComposer value={input} onChangeText={setInput} onSubmit={handleSubmit} editable={!isLoading} />
     </View>
   );
 }
@@ -70,23 +80,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignSelf: "stretch",
-    padding: 80,
-    gap: 32,
+    paddingVertical: space.safeY,
+    paddingHorizontal: space.safeX,
+    gap: space[5],
+  },
+  welcomeComposer: {
+    width: 1200,
   },
   messages: {
     flex: 1,
   },
-  composer: {
-    flexDirection: "row",
-    gap: 24,
+  messagesContent: {
+    flexGrow: 1,
+    justifyContent: "flex-end",
+    gap: space[5],
   },
-  input: {
-    flex: 1,
-    fontSize: 32,
-    paddingHorizontal: 32,
-    paddingVertical: 20,
-    borderRadius: 16,
-    backgroundColor: colors.surface,
-    color: colors.foreground,
+  error: {
+    color: colors.danger,
   },
 });

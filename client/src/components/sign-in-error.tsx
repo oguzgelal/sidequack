@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
-import { typography } from "../theme";
-import { TvButton } from "./tv-button";
+import { space, typography } from "../theme";
+import { Button } from "./ui/button";
+import { Duck } from "./ui/duck";
 
 type SignInErrorProps = {
   message: string;
@@ -10,9 +11,10 @@ type SignInErrorProps = {
 export function SignInError({ message, onRetry }: SignInErrorProps) {
   return (
     <View style={styles.container}>
-      <Text style={typography.title}>{"Couldn't sign you in"}</Text>
+      <Duck height={160} />
+      <Text style={typography.title1}>{"Couldn't sign you in"}</Text>
       <Text style={[typography.body, styles.message]}>{message}</Text>
-      <TvButton label="Try again" onPress={onRetry} hasTVPreferredFocus />
+      <Button label="Try again" variant="primary" onPress={onRetry} hasTVPreferredFocus />
     </View>
   );
 }
@@ -20,9 +22,9 @@ export function SignInError({ message, onRetry }: SignInErrorProps) {
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
-    gap: 24,
+    gap: space[5],
   },
   message: {
-    marginBottom: 24,
+    marginBottom: space[4],
   },
 });

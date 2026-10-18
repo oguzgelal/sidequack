@@ -1,5 +1,5 @@
 import { StyleSheet, Text } from "react-native";
-import { colors } from "../../../theme";
+import { colors, fonts } from "../../../theme";
 
 export function TextPart({ text }: { text: string }) {
   return <Text style={styles.text}>{text}</Text>;
@@ -7,7 +7,10 @@ export function TextPart({ text }: { text: string }) {
 
 const styles = StyleSheet.create({
   text: {
-    fontSize: 32,
-    color: colors.foreground,
+    maxWidth: 1300,
+    fontFamily: fonts.textMedium,
+    fontSize: 34,
+    lineHeight: 46,
+    color: colors.ink,
   },
 });

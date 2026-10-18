@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 import tailwindcss from "@tailwindcss/vite";
-import devServer from "@hono/vite-dev-server";
+import devServer, { defaultOptions } from "@hono/vite-dev-server";
 import nodeAdapter from "@hono/vite-dev-server/node";
 import build from "@hono/vite-build/node";
 import { inertiaPages } from "@hono/inertia/vite";
@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => ({
             outFile: "src/pages.gen.ts",
             serverModule: "./index",
           }),
-          devServer({ entry, adapter: nodeAdapter }),
+          devServer({ entry, adapter: nodeAdapter, exclude: [...defaultOptions.exclude, /^\/src\/assets\/.+/] }),
           build({ entry, port: 3000, staticRoot: "./dist" }),
         ],
   build:

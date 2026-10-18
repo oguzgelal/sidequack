@@ -32,6 +32,7 @@
       },
       "bundleIdentifier": "com.oguzgelal.tvai"
     },
+    "userInterfaceStyle": "dark",
     "name": "tvai",
     "slug": "tvai"
   }
